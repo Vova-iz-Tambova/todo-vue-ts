@@ -1,11 +1,11 @@
 <template>
   <AppHeader />
 
-  <AppFilters />
+  <AppFilters :active-filter="activeFilter" @set-filer="setFilter" />
 
   <main class="app-main">
     <AppTodoList
-      :todos="todos"
+      :todos="filterdTodos"
       @toggle-todo="toggleTodo"
       @remove-todo="removeTodo"
     />
@@ -13,7 +13,7 @@
     <AppAddTodo @add-todo="addTodo" />
   </main>
 
-  <AppFooter />
+  <AppFooter :stats="stats" />
 </template>
 
 <script lang="ts">
@@ -22,11 +22,13 @@ import AppHeader from "./components/AppHeader.vue";
 import AppFilters from "./components/AppFilters.vue";
 import AppTodoList from "./components/AppTodoList.vue";
 import AppAddTodo from "./components/AppAddTodo.vue";
-import AppFooter from "./components/AppFooter.vue";
+import AppFooter, { Stats } from "./components/AppFooter.vue";
 import { Todo } from "./types/Todo";
+import { Filter } from "./types/Filter";
 
 interface State {
   todos: Todo[];
+  activeFilter: Filter;
 }
 
 export default defineComponent({
@@ -45,7 +47,33 @@ export default defineComponent({
         { id: 2, text: "Subscribe to the channel", complited: false },
         // { id: '3', stext: 'Todoitem' },
       ],
+      activeFilter: "All",
     };
+  },
+  computed: {
+    filterdTodos(): Todo[] {
+      switch (this.activeFilter) {
+        case "Active":
+          return this.activeTodos;
+        case "Done":
+          return this.doneTodos;
+        case "All":
+        default:
+          return this.todos;
+      }
+    },
+    stats(): Stats {
+      return {
+        active: this.activeTodos.length,
+        done: this.doneTodos.length,
+      };
+    },
+    activeTodos(): Todo[] {
+      return this.todos.filter((todo) => !todo.complited);
+    },
+    doneTodos(): Todo[] {
+      return this.todos.filter((todo) => todo.complited);
+    },
   },
   methods: {
     addTodo(todo: Todo) {
@@ -60,6 +88,9 @@ export default defineComponent({
     },
     removeTodo(id: number) {
       this.todos = this.todos.filter((todo: Todo) => todo.id !== id);
+    },
+    setFilter(filter: Filter) {
+      this.activeFilter = filter;
     },
   },
 });
